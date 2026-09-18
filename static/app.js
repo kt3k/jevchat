@@ -1084,14 +1084,16 @@ $("#chat-input").addEventListener("input", (e) => {
   el.style.height = Math.min(el.scrollHeight, 160) + "px";
 });
 
-$("#new-chat").addEventListener("click", () => {
+function startNewChat() {
   currentChatId = null;
   renderHistory();
   renderMessages();
   renderTitle();
   closeSidebar();
   $("#chat-input").focus();
-});
+}
+$("#new-chat").addEventListener("click", startNewChat);
+$("#new-chat-mobile").addEventListener("click", startNewChat);
 
 $("#lang-select").addEventListener("change", (e) => {
   lang = e.target.value;
