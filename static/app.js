@@ -40,6 +40,7 @@ const I18N = {
     detailsChoiceIntro:
       "Jev picked the answer itself from these options (calibrated probabilities):",
     detailsNoulIntro: "Jev's raw yes-probability (noul), no mapping:",
+    askAgain: "ask in another style",
     pickStyle: "Jev can answer in different styles — pick one:",
     shuffle: "Shuffle questions",
     suggestions: [
@@ -103,6 +104,7 @@ const I18N = {
     details: "詳細",
     detailsChoiceIntro: "Jev がこの選択肢の中から自分で選択 (較正済み確率):",
     detailsNoulIntro: "Jev が返した生のイエス確率 (noul)、マッピングなし:",
+    askAgain: "別の回答スタイルで聞く",
     pickStyle: "Jev の答え方は変えられます — スタイルを選んでね:",
     shuffle: "他の質問を見る",
     suggestions: [
@@ -702,6 +704,7 @@ function messageEl(msg, animate = false) {
 
   // The numbers are tucked away behind a collapsed "details" toggle so the
   // deadpan one-word answer stands alone.
+  let detailsContent = null;
   if (detail && typeof detail.p === "number") {
     const pct = Math.round(detail.p * 100);
     const box = document.createElement("div");
@@ -717,7 +720,7 @@ function messageEl(msg, animate = false) {
        <span></span>`;
     meter.querySelector("span").textContent = I18N[lang].yesProb(pct);
     box.append(intro, meter);
-    body.appendChild(detailsEl(box));
+    detailsContent = box;
   } else if (detail && detail.probabilities) {
     // Show Jev's full distribution over the options it chose from.
     const box = document.createElement("div");
@@ -751,10 +754,64 @@ function messageEl(msg, animate = false) {
       );
       box.appendChild(conf);
     }
-    body.appendChild(detailsEl(box));
+    detailsContent = box;
   }
+
+  const actions = document.createElement("div");
+  actions.className = "flex items-start gap-3";
+  if (detailsContent) actions.appendChild(detailsEl(detailsContent));
+  const question = questionFor(msg);
+  if (question) actions.appendChild(reAskDropdown(question));
+  if (actions.childNodes.length > 0) body.appendChild(actions);
+
   wrap.appendChild(body);
   return wrap;
+}
+
+/** The question this Jev message answered (stored on new messages; derived
+ * from the preceding user message for history saved by older versions). */
+function questionFor(msg) {
+  if (msg.question) return msg.question;
+  const chat = currentChat();
+  if (!chat) return null;
+  const i = chat.messages.indexOf(msg);
+  for (let j = (i < 0 ? chat.messages.length : i) - 1; j >= 0; j--) {
+    if (chat.messages[j].role === "user") return chat.messages[j].text;
+  }
+  return null;
+}
+
+/** "Ask in another style" text button with a style dropdown. */
+function reAskDropdown(question) {
+  const dd = document.createElement("details");
+  dd.className = "relative text-[11px] text-muted-foreground";
+  dd.dataset.dropdown = "";
+  const sum = document.createElement("summary");
+  sum.className =
+    "cursor-pointer select-none w-fit opacity-70 hover:opacity-100";
+  sum.textContent = t("askAgain");
+  const menu = document.createElement("div");
+  menu.className =
+    "absolute left-0 top-full mt-1 z-20 min-w-48 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md py-1 text-sm text-foreground";
+  for (const m of allModes()) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className =
+      "w-full text-left px-3 py-1.5 hover:bg-accent flex items-center gap-1.5 cursor-pointer";
+    const icon = document.createElement("span");
+    icon.textContent = modeIcon(m);
+    const name = document.createElement("span");
+    name.className = "truncate";
+    name.textContent = modeName(m);
+    b.append(icon, name);
+    b.addEventListener("click", () => {
+      dd.open = false;
+      reAsk(question, m);
+    });
+    menu.appendChild(b);
+  }
+  dd.append(sum, menu);
+  return dd;
 }
 
 function detailsEl(content) {
@@ -787,7 +844,14 @@ function newChatObj() {
 
 function buildState(chat, question) {
   const lines = [];
-  const prior = chat.messages.slice(-MAX_CONTEXT_TURNS * 2);
+  // The question is passed separately below; don't repeat it as history when
+  // it is the (already appended) latest user message.
+  let history = chat.messages;
+  const last = history[history.length - 1];
+  if (last?.role === "user" && last.text === question) {
+    history = history.slice(0, -1);
+  }
+  const prior = history.slice(-MAX_CONTEXT_TURNS * 2);
   if (prior.length > 0) {
     lines.push("Conversation so far:");
     for (const m of prior) {
@@ -821,8 +885,6 @@ async function sendMessage(text) {
   }
   chat.modeId = currentModeId;
   const isFirst = chat.messages.length === 0;
-  const mode = findMode(currentModeId);
-  const state = buildState(chat, question);
 
   chat.messages.push({ role: "user", text: question });
   saveJSON(LS.chats, chats);
@@ -831,6 +893,20 @@ async function sendMessage(text) {
     messageEl({ role: "user", text: question }, true),
   );
   scrollToBottom();
+
+  await askJev(chat, question, findMode(currentModeId), isFirst);
+}
+
+/** Re-ask the same question in a different style: appends only Jev's new
+ * answer, without repeating the question or changing the selected style. */
+function reAsk(question, mode) {
+  const chat = currentChat();
+  if (!chat || pending) return;
+  askJev(chat, question, mode, false);
+}
+
+async function askJev(chat, question, mode, isFirst) {
+  const state = buildState(chat, question);
 
   // thinking indicator
   pending = true;
@@ -865,7 +941,7 @@ async function sendMessage(text) {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    jevMsg = { role: "jev", modeId: mode.id, result: data.answer };
+    jevMsg = { role: "jev", modeId: mode.id, question, result: data.answer };
     if (isFirst) {
       chat.title = (data.title && data.title.confidence >= 0.25)
         ? data.title.text
@@ -873,7 +949,7 @@ async function sendMessage(text) {
     }
   } catch (err) {
     console.error(err);
-    jevMsg = { role: "jev", modeId: mode.id, error: true };
+    jevMsg = { role: "jev", modeId: mode.id, question, error: true };
     if (isFirst) chat.title = fallbackTitle();
   }
 
@@ -1011,6 +1087,13 @@ $("#custom-save").addEventListener("click", (e) => {
 $("#custom-cancel").addEventListener("click", (e) => {
   e.preventDefault();
   $("#custom-dialog").close();
+});
+
+// Close any open "ask in another style" dropdown when clicking elsewhere.
+document.addEventListener("click", (e) => {
+  for (const dd of document.querySelectorAll("details[data-dropdown][open]")) {
+    if (!dd.contains(e.target)) dd.open = false;
+  }
 });
 
 globalThis.matchMedia("(prefers-color-scheme: dark)").addEventListener(
