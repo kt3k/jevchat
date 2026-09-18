@@ -190,46 +190,6 @@ const BUILTIN_MODES = [
     ],
   },
   {
-    id: "magic8",
-    icon: "🎱",
-    name: { en: "Magic 8-Ball", ja: "マジック8ボール" },
-    kind: "choice",
-    options: [
-      {
-        en: "It is certain.",
-        ja: "間違いない。",
-        hint: "Yes, with near-total certainty",
-      },
-      {
-        en: "Without a doubt.",
-        ja: "疑いの余地なし。",
-        hint: "Yes, very confidently",
-      },
-      {
-        en: "Signs point to yes.",
-        ja: "イエスの気配。",
-        hint: "Probably yes",
-      },
-      { en: "Most likely.", ja: "たぶんね。", hint: "Leaning yes, but unsure" },
-      {
-        en: "Ask again later.",
-        ja: "また後で聞いて。",
-        hint: "Too uncertain to answer either way",
-      },
-      {
-        en: "Don't count on it.",
-        ja: "期待しないで。",
-        hint: "Leaning no, but unsure",
-      },
-      { en: "My reply is no.", ja: "答えはノー。", hint: "Probably no" },
-      {
-        en: "Very doubtful.",
-        ja: "かなり怪しい。",
-        hint: "No, very confidently",
-      },
-    ],
-  },
-  {
     id: "vibe",
     icon: "🔥",
     name: { en: "Vibe check", ja: "テンション高め" },
@@ -251,29 +211,6 @@ const BUILTIN_MODES = [
         en: "ABSOLUTELY NOT.",
         ja: "絶対にない!!!",
         hint: "An emphatic, horrified no",
-      },
-    ],
-  },
-  {
-    id: "cat",
-    icon: "🐱",
-    name: { en: "Cat", ja: "猫" },
-    kind: "choice",
-    options: [
-      {
-        en: "Meow! ᓚᘏᗢ (yes)",
-        ja: "ニャー！ᓚᘏᗢ (はい)",
-        hint: "The answer is yes",
-      },
-      {
-        en: "…purr? (who knows)",
-        ja: "…ゴロゴロ？(さあ)",
-        hint: "The cat cannot decide",
-      },
-      {
-        en: "HISSSS. (no)",
-        ja: "シャーッ！(いいえ)",
-        hint: "The answer is no",
       },
     ],
   },
