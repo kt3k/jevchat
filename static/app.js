@@ -541,10 +541,17 @@ function renderHistory() {
     row.className =
       "group flex items-center gap-1 rounded-md px-2 py-1.5 cursor-pointer text-sm hover:bg-accent " +
       (chat.id === currentChatId ? "bg-accent font-medium" : "");
+    const text = document.createElement("div");
+    text.className = "flex-1 min-w-0 flex flex-col";
     const title = document.createElement("span");
-    title.className = "flex-1 truncate";
+    title.className = "truncate";
     title.textContent = chat.title || t("untitled");
-    row.appendChild(title);
+    const mode = findMode(chat.modeId);
+    const style = document.createElement("span");
+    style.className = "truncate text-[11px] text-muted-foreground font-normal";
+    style.textContent = `${modeIcon(mode)} ${modeName(mode)}`;
+    text.append(title, style);
+    row.appendChild(text);
     const del = document.createElement("button");
     del.className =
       "btn opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity shrink-0";
@@ -564,9 +571,12 @@ function renderHistory() {
     row.appendChild(del);
     row.addEventListener("click", () => {
       currentChatId = chat.id;
+      // Reopening a chat restores the style it was last asked in.
       if (chat.modeId && allModes().some((m) => m.id === chat.modeId)) {
         currentModeId = chat.modeId;
+        saveJSON(LS.mode, currentModeId);
         $("#mode-select").value = currentModeId;
+        renderStylePicker();
       }
       renderHistory();
       renderMessages();
@@ -820,7 +830,6 @@ async function sendMessage(text) {
     while (chats.length > MAX_CHATS) chats.pop();
     currentChatId = chat.id;
   }
-  chat.modeId = currentModeId;
   const isFirst = chat.messages.length === 0;
 
   chat.messages.push({ role: "user", text: question });
@@ -843,6 +852,16 @@ function reAsk(question, mode) {
 }
 
 async function askJev(chat, question, mode, isFirst) {
+  // The asked style becomes the chat's (and the globally selected) style, so
+  // picking one via "ask in another style" sticks.
+  chat.modeId = mode.id;
+  if (currentModeId !== mode.id) {
+    currentModeId = mode.id;
+    saveJSON(LS.mode, currentModeId);
+    $("#mode-select").value = mode.id;
+    renderStylePicker();
+  }
+
   const state = buildState(chat, question);
 
   // thinking indicator
