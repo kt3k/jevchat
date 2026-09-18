@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-read=static --allow-env=JEV_KEY main.ts",
+    "dev": "deno run --watch --allow-net --allow-read=static --allow-env=JEV_KEY main.ts"
+  },
+  "imports": {
+    "@std/http": "jsr:@std/http@^1.0.0"
+  },
+  "deploy": {
+    "entrypoint": "main.ts"
+  }
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jevchat</title>
+    <meta name="description"
+      content="Chat with Jev, the AI that only answers yes or no.">
+    <link rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
+    <script>
+    // Apply dark mode before paint (basecoat uses html.dark)
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.classList.add("dark");
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/basecoat-css@latest/dist/basecoat.cdn.min.css">
+    <style type="text/tailwindcss">
+    /* Expose basecoat's theme tokens to the Tailwind Play CDN so utilities
+       like bg-primary / text-muted-foreground resolve (dark mode included). */
+    @theme inline {
+      --color-background: var(--background);
+      --color-foreground: var(--foreground);
+      --color-primary: var(--primary);
+      --color-primary-foreground: var(--primary-foreground);
+      --color-muted: var(--muted);
+      --color-muted-foreground: var(--muted-foreground);
+      --color-accent: var(--accent);
+      --color-accent-foreground: var(--accent-foreground);
+      --color-border: var(--border);
+      --color-destructive: var(--destructive);
+    }
+    </style>
+    <style>
+    html,
+    body {
+      height: 100%;
+    }
+    .msg-enter {
+      animation: msg-in 0.25s ease-out;
+    }
+    @keyframes msg-in {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+    .thinking-dot {
+      animation: blink 1.2s infinite both;
+    }
+    .thinking-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .thinking-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes blink {
+      0%,
+      80%,
+      100% {
+        opacity: 0.2;
+      }
+      40% {
+        opacity: 1;
+      }
+    }
+    </style>
+  </head>
+  <body class="bg-background text-foreground overflow-hidden">
+    <div class="flex h-dvh">
+      <!-- Sidebar backdrop (mobile) -->
+      <div id="sidebar-backdrop"
+        class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+      <!-- Sidebar -->
+      <aside id="sidebar"
+        class="fixed md:static z-40 h-full w-72 shrink-0 -translate-x-full md:translate-x-0 transition-transform duration-200 bg-muted/40 backdrop-blur border-r border-border flex flex-col">
+        <div class="p-3 flex items-center gap-2">
+          <span class="text-xl">🔮</span>
+          <span class="font-bold text-lg tracking-tight">jevchat</span>
+          <span class="badge ml-auto" data-variant="secondary"
+            data-i18n="demo">demo</span>
+        </div>
+        <div class="px-3 pb-2">
+          <button id="new-chat" class="btn w-full" data-variant="outline">
+          <span>＋</span><span data-i18n="newChat">New chat</span>
+        </button>
+        </div>
+        <nav id="history"
+          class="flex-1 overflow-y-auto px-3 py-1 flex flex-col gap-1"></nav>
+        <div class="p-3 border-t border-border flex items-center gap-2">
+          <label class="label text-xs text-muted-foreground" for="lang-select"
+            data-i18n="language">Language</label>
+          <select id="lang-select" class="select flex-1" data-size="sm">
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex-1 flex flex-col min-w-0">
+        <header
+          class="flex items-center gap-2 px-3 py-2 border-b border-border">
+          <button id="sidebar-toggle" class="btn md:hidden" data-variant="ghost"
+            data-size="icon" aria-label="Toggle sidebar">☰</button>
+          <h1 id="chat-title"
+            class="font-medium truncate text-sm text-muted-foreground flex-1"
+            data-i18n="untitled">New chat</h1>
+          <label class="text-xs text-muted-foreground hidden sm:block"
+            for="mode-select" data-i18n="answerStyle">Answer style</label>
+          <select id="mode-select" class="select max-w-48"
+            data-size="sm"></select>
+        </header>
+
+        <section id="messages" class="flex-1 overflow-y-auto">
+          <div id="messages-inner"
+            class="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4"></div>
+          <!-- Empty state -->
+          <div id="empty-state"
+            class="max-w-2xl mx-auto px-4 pt-16 text-center flex flex-col items-center gap-4">
+            <div class="text-6xl">🔮</div>
+            <h2 class="text-2xl font-bold"
+              data-i18n="emptyTitle">Ask Jev anything</h2>
+            <p class="text-muted-foreground text-sm max-w-md"
+              data-i18n="emptySubtitle">
+            Jev is a System One model by TypeSafe AI. It never writes essays — it just decides. By default: Yes or No.
+          </p>
+            <div id="suggestions"
+              class="flex flex-wrap justify-center gap-2 pt-2"></div>
+          </div>
+        </section>
+
+        <footer class="border-t border-border">
+          <form id="chat-form"
+            class="max-w-2xl mx-auto px-4 py-3 flex items-end gap-2">
+            <textarea id="chat-input"
+              class="textarea flex-1 resize-none min-h-10 max-h-40" rows="1"
+              placeholder="Ask a yes/no question…"
+              data-i18n-placeholder="inputPlaceholder"></textarea>
+            <button id="send-btn" class="btn" type="submit"
+              data-i18n="send">Send</button>
+          </form>
+          <p class="text-center text-[11px] text-muted-foreground pb-2 px-4"
+            data-i18n="disclaimer">
+          Jev answers with calibrated probabilities, not words. History is stored locally in your browser (max 10 chats).
+        </p>
+        </footer>
+      </main>
+    </div>
+
+    <!-- Custom mode dialog -->
+    <dialog id="custom-dialog" class="dialog" data-size="sm">
+      <div class="max-w-md">
+        <header>
+          <h2 data-i18n="customTitle">Create a custom answer style</h2>
+          <p
+            data-i18n="customSubtitle">Give Jev your own set of answers to choose from.</p>
+        </header>
+        <section class="flex flex-col gap-3 py-2">
+          <div class="flex flex-col gap-1">
+            <label class="label" for="custom-name"
+              data-i18n="customName">Style name</label>
+            <input id="custom-name" class="input" maxlength="24"
+              placeholder="Grandma mode">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="label" for="custom-options"
+              data-i18n="customOptions">Answers (one per line, 2–8)</label>
+            <textarea id="custom-options" class="textarea min-h-28"
+              placeholder="Yes, dear | warm approval&#10;Absolutely not | firm refusal&#10;Eat something first"></textarea>
+            <p class="text-xs text-muted-foreground" data-i18n="customHint">
+            Optionally add “ | hint” after an answer to tell Jev when to pick it.
+          </p>
+          </div>
+          <p id="custom-error" class="text-xs text-destructive hidden"></p>
+        </section>
+        <footer>
+          <button class="btn" data-variant="outline" id="custom-cancel"
+            data-i18n="cancel">Cancel</button>
+          <button class="btn" id="custom-save" data-i18n="save">Save</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
