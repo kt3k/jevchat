@@ -16,7 +16,7 @@ const I18N = {
     inputPlaceholder: "Ask a yes/no question…",
     send: "Send",
     disclaimer:
-      "Jev answers with calibrated probabilities, not words. History is stored locally in your browser (max 10 chats).",
+      "Jev's answers are not always correct. Check important information.",
     customTitle: "Create a custom answer style",
     customSubtitle: "Give Jev your own set of answers to choose from.",
     customName: "Style name",
@@ -80,7 +80,7 @@ const I18N = {
     inputPlaceholder: "Yes/No で答えられる質問をどうぞ…",
     send: "送信",
     disclaimer:
-      "Jev は言葉ではなく較正された確率で答えます。履歴はブラウザ内 (localStorage) に最大10件保存されます。",
+      "Jev の回答は必ずしも正しいとは限りません。重要な情報は確認するようにしてください。",
     customTitle: "カスタム回答スタイルを作る",
     customSubtitle: "Jev に選ばせたい答えを自由に設定できます。",
     customName: "スタイル名",
