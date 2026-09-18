@@ -5,8 +5,8 @@ A ChatGPT-style chat UI for
 AI's System One model that never generates text — it only decides.
 
 By default Jev answers **Yes** or **No**. You can switch to other answer styles
-(Yes/No/Maybe, Mom, Pirate, Fortune teller, raw probabilities, …) or create your
-own custom set of answers for Jev to choose from.
+(Yes/No/Maybe, Mom, Pirate, Tabloid headlines, …) or create your own custom set
+of answers for Jev to choose from.
 
 ## Features
 
@@ -50,8 +50,6 @@ browser):
   criteria are the style's answers, so Jev itself picks which answer to give —
   there is no client-side probability mapping. The collapsed "details" toggle
   under each reply shows Jev's calibrated probability for every option.
-- The one exception is the "Just the numbers" style, which sends a `noul`
-  question and shows the raw yes-probability.
 - Remix styles (Daily fortune, Politician, Tabloid) go one step further: the
   server splits the question into fragments (the same `Intl.Segmenter` machinery
   as chat titles), crosses them with verdict templates like

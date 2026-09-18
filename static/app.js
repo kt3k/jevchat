@@ -135,10 +135,10 @@ const I18N = {
 };
 
 /* ------------------------------ answer modes ------------------------------ */
-// Every mode (except "percent") is a Jev `choice` question: the options below
-// become the choice criteria, so Jev itself picks which answer to give — no
-// client-side probability mapping. Each option's hint tells Jev when that
-// answer applies. "percent" alone uses `noul` to show the raw yes-probability.
+// Every mode is a Jev `choice` question: the options below become the choice
+// criteria, so Jev itself picks which answer to give — no client-side
+// probability mapping. Each option's hint tells Jev when that answer applies.
+// Remix modes compose their options server-side from the question's fragments.
 
 const BUILTIN_MODES = [
   {
@@ -250,34 +250,6 @@ const BUILTIN_MODES = [
       { en: "Nay!", ja: "ノーじゃ！", hint: "The answer is no" },
     ],
   },
-  {
-    id: "fortune",
-    name: { en: "Fortune teller", ja: "占い師" },
-    kind: "choice",
-    options: [
-      {
-        en: "The stars say YES.",
-        ja: "星は告げている——大吉。",
-        hint: "A confident yes",
-      },
-      {
-        en: "The crystal ball leans yes…",
-        ja: "水晶玉はイエスに傾いておる…",
-        hint: "Leaning yes",
-      },
-      {
-        en: "The mist has not cleared…",
-        ja: "霧はまだ晴れぬ…",
-        hint: "Too uncertain to decide",
-      },
-      { en: "The omens are bad.", ja: "凶兆が出ておる。", hint: "Leaning no" },
-      {
-        en: "The stars say NO.",
-        ja: "星は告げている——大凶。",
-        hint: "A confident no",
-      },
-    ],
-  },
   // Remix styles: the server splits the question into fragments, crosses them
   // with these verdict templates ("{}" = fragment), and Jev picks one composed
   // answer — deciding the verdict and the topic fragment at the same time.
@@ -351,11 +323,6 @@ const BUILTIN_MODES = [
         hint: "The answer is no",
       },
     ],
-  },
-  {
-    id: "percent",
-    name: { en: "Just the numbers", ja: "確率そのまま" },
-    kind: "noul", // the one mode that shows Jev's raw yes-probability
   },
 ];
 
