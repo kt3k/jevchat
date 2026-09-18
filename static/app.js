@@ -803,7 +803,23 @@ function reAskDropdown(question) {
   sum.textContent = t("askAgain");
   const menu = document.createElement("div");
   menu.className =
-    "absolute left-0 top-full mt-1 z-20 min-w-48 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md py-1 text-sm text-foreground";
+    "absolute left-0 z-20 min-w-48 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md py-1 text-sm text-foreground";
+  // Open upward when the trigger sits near the bottom of the scroll area, so
+  // the menu isn't hidden behind the chat input.
+  dd.addEventListener("toggle", () => {
+    if (!dd.open) return;
+    const viewport = $("#messages").getBoundingClientRect();
+    const trigger = sum.getBoundingClientRect();
+    const spaceBelow = viewport.bottom - trigger.bottom - 8;
+    const spaceAbove = trigger.top - viewport.top - 8;
+    const openUp = spaceBelow < 260 && spaceAbove > spaceBelow;
+    menu.style.maxHeight =
+      Math.min(256, Math.max(120, openUp ? spaceAbove : spaceBelow)) + "px";
+    menu.classList.toggle("bottom-full", openUp);
+    menu.classList.toggle("mb-1", openUp);
+    menu.classList.toggle("top-full", !openUp);
+    menu.classList.toggle("mt-1", !openUp);
+  });
   for (const m of allModes()) {
     const b = document.createElement("button");
     b.type = "button";
