@@ -52,6 +52,11 @@ browser):
   under each reply shows Jev's calibrated probability for every option.
 - The one exception is the "Just the numbers" style, which sends a `noul`
   question and shows the raw yes-probability.
+- Remix styles (Daily fortune, Politician, Tabloid) go one step further: the
+  server splits the question into fragments (the same `Intl.Segmenter` machinery
+  as chat titles), crosses them with verdict templates like
+  `"【悲報】{}、ナシ"`, and Jev picks one fully composed answer — deciding the
+  verdict and which fragment is the topic in a single `choice` question.
 - On the first message of a chat, a second `choice` question asks Jev to pick
   the question fragment that best captures the topic, which becomes the chat
   title.

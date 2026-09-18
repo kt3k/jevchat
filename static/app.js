@@ -306,6 +306,80 @@ const BUILTIN_MODES = [
       },
     ],
   },
+  // Remix styles: the server splits the question into fragments, crosses them
+  // with these verdict templates ("{}" = fragment), and Jev picks one composed
+  // answer — deciding the verdict and the topic fragment at the same time.
+  {
+    id: "unsei",
+    name: { en: "Daily fortune", ja: "今日の運勢" },
+    kind: "remix",
+    templates: [
+      {
+        en: "{} outlook: excellent",
+        ja: "{}運:大吉",
+        hint: "The answer to the user's question is a strong yes",
+      },
+      {
+        en: "{} outlook: good",
+        ja: "{}運:吉",
+        hint: "The answer is a mild yes",
+      },
+      {
+        en: "{} outlook: poor",
+        ja: "{}運:凶",
+        hint: "The answer is a mild no",
+      },
+      {
+        en: "{} outlook: doomed",
+        ja: "{}運:大凶",
+        hint: "The answer is a strong no",
+      },
+    ],
+  },
+  {
+    id: "politician",
+    name: { en: "Politician", ja: "政治家" },
+    kind: "remix",
+    templates: [
+      {
+        en: "Regarding {}, we will proceed positively.",
+        ja: "{}については、前向きに検討いたします。",
+        hint: "The answer leans yes",
+      },
+      {
+        en: "On {}, I must refrain from answering.",
+        ja: "{}につきましては、回答を差し控えます。",
+        hint: "Too uncertain or sensitive to answer",
+      },
+      {
+        en: "There are no plans whatsoever for {}.",
+        ja: "{}は、断じてございません。",
+        hint: "The answer leans no",
+      },
+    ],
+  },
+  {
+    id: "headline",
+    name: { en: "Tabloid", ja: "ネット見出し" },
+    kind: "remix",
+    templates: [
+      {
+        en: "BREAKING: {} — it's a go",
+        ja: "【朗報】{}、アリ",
+        hint: "The answer is yes",
+      },
+      {
+        en: "BREAKING: {} — jury still out",
+        ja: "【速報】{}、判断つかず",
+        hint: "Too uncertain to decide",
+      },
+      {
+        en: "BREAKING: {} — not happening",
+        ja: "【悲報】{}、ナシ",
+        hint: "The answer is no",
+      },
+    ],
+  },
   {
     id: "percent",
     name: { en: "Just the numbers", ja: "確率そのまま" },
@@ -471,6 +545,13 @@ function sendOptions(mode) {
 /** Short preview of how a mode answers, e.g. "Yes. / No." */
 function modeExample(mode) {
   if (mode.kind === "noul") return I18N[lang].percentYes(87);
+  if (mode.kind === "remix") {
+    const blank = lang === "ja" ? "◯◯" : "...";
+    const labels = mode.templates.map((t) =>
+      (t[lang] || t.en).replace("{}", blank)
+    );
+    return `${labels[0]} / ${labels[labels.length - 1]}`;
+  }
   const labels = mode.options.map(optionLabel);
   if (labels.length <= 4) return labels.join(" / ");
   // Long lists (e.g. 8-ball): show the two extremes.
@@ -864,8 +945,14 @@ async function askJev(chat, question, mode, isFirst) {
     question,
     lang,
     wantTitle: isFirst,
-    mode: mode.kind === "noul"
-      ? { kind: "noul" }
+    mode: mode.kind === "noul" ? { kind: "noul" } : mode.kind === "remix"
+      ? {
+        kind: "remix",
+        templates: mode.templates.map((t) => ({
+          tpl: t[lang] || t.en,
+          hint: t.hint,
+        })),
+      }
       : { kind: "choice", options: sendOptions(mode) },
   };
 

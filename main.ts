@@ -15,10 +15,18 @@ interface ChoiceOption {
   hint?: string;
 }
 
+interface RemixTemplate {
+  tpl: string; // contains "{}", replaced by a fragment of the question
+  hint: string; // when Jev should pick an answer built from this template
+}
+
 interface ChatRequest {
   state: string;
   question: string;
-  mode: { kind: "noul" } | { kind: "choice"; options: ChoiceOption[] };
+  mode:
+    | { kind: "noul" }
+    | { kind: "choice"; options: ChoiceOption[] }
+    | { kind: "remix"; templates: RemixTemplate[] };
   wantTitle?: boolean;
   lang?: string;
 }
@@ -104,8 +112,31 @@ function validate(body: unknown): ChatRequest | string {
     return "question is required";
   }
   const mode = b.mode as ChatRequest["mode"] | undefined;
-  if (!mode || (mode.kind !== "noul" && mode.kind !== "choice")) {
-    return "mode.kind must be 'noul' or 'choice'";
+  if (
+    !mode ||
+    (mode.kind !== "noul" && mode.kind !== "choice" && mode.kind !== "remix")
+  ) {
+    return "mode.kind must be 'noul', 'choice' or 'remix'";
+  }
+  if (mode.kind === "remix") {
+    const tpls = mode.templates;
+    if (!Array.isArray(tpls) || tpls.length < 2 || tpls.length > 4) {
+      return "mode.templates must have 2-4 entries";
+    }
+    for (const t of tpls) {
+      if (
+        typeof t?.tpl !== "string" || !t.tpl.includes("{}") ||
+        t.tpl.length < 3 || t.tpl.length > 60
+      ) {
+        return "each template needs a short tpl containing {}";
+      }
+      if (
+        typeof t.hint !== "string" || t.hint.length === 0 ||
+        t.hint.length > 200
+      ) {
+        return "each template needs a hint";
+      }
+    }
   }
   if (mode.kind === "choice") {
     const opts = mode.options;
@@ -163,6 +194,67 @@ async function handleChat(req: Request): Promise<Response> {
         false:
           "The most reasonable direct answer to the user's latest question is no",
       },
+    };
+  } else if (chat.mode.kind === "remix") {
+    // Remix styles: compose full answers out of fragments of the user's own
+    // question crossed with verdict templates, then let Jev pick one — it
+    // decides the verdict AND which fragment is the topic in a single choice.
+    // Fragment edges often carry function words that read badly inside a
+    // template — Japanese particles ("にデプロイ") or English auxiliaries and
+    // subject pronouns ("Should I text") — so trim them off.
+    const isJa = (chat.lang ?? "en").startsWith("ja");
+    const jaEdge =
+      /^[にをがはのでともへやかてし]+|[にをがはのでともへやかてし]+$/g;
+    // deno-fmt-ignore
+    const enLead = new Set([
+      "should", "shall", "is", "are", "am", "was", "were", "do", "does",
+      "did", "can", "could", "will", "would", "may", "might", "must",
+      "i", "you", "we", "they", "he", "she", "it",
+    ]);
+    // deno-fmt-ignore
+    const enTrail = new Set([
+      "the", "a", "an", "my", "your", "our", "their", "his", "her", "its",
+      "i", "you", "we", "to", "of", "for", "and", "or", "is", "are",
+      "do", "does",
+    ]);
+    const clean = (f: string): string => {
+      if (isJa) return f.replace(jaEdge, "");
+      const w = f.split(" ");
+      while (w.length > 0 && enLead.has(w[0].toLowerCase())) w.shift();
+      while (w.length > 0 && enTrail.has(w[w.length - 1].toLowerCase())) {
+        w.pop();
+      }
+      return w.join(" ");
+    };
+    const fragments = [
+      ...new Set(
+        titleCandidates(chat.question, chat.lang ?? "en")
+          .map(clean)
+          .filter((f) => f.length >= 2 && !/[?？!！。.]/.test(f)),
+      ),
+    ].sort((a, b) => b.length - a.length);
+    const perTier = Math.max(
+      1,
+      Math.floor(MAX_OPTIONS / chat.mode.templates.length),
+    );
+    let picks = fragments.slice(0, perTier);
+    if (picks.length === 0) {
+      picks = [chat.question.trim().replace(/[?？!！。.]+$/, "").slice(0, 20)];
+    }
+    const criteria: Record<string, string> = {};
+    for (const t of chat.mode.templates) {
+      for (const f of picks) {
+        const key = t.tpl.replace("{}", f).slice(0, 64);
+        if (criteria[key]) continue;
+        criteria[key] =
+          `${t.hint}. This answer quotes "${f}" from the question; prefer the option whose quoted fragment best captures the topic.`;
+      }
+    }
+    questions.answer = {
+      type: "choice",
+      instructions:
+        "Each option is a composed answer: a fragment of the user's question plus a verdict. Pick the option whose verdict correctly answers the user's latest question AND whose fragment best captures its topic.",
+      criteria,
     };
   } else {
     const criteria: Record<string, string> = {};
