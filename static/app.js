@@ -801,9 +801,32 @@ function reAskDropdown(question) {
   sum.className =
     "cursor-pointer select-none w-fit opacity-70 hover:opacity-100";
   sum.textContent = t("askAgain");
+  const wrap = document.createElement("div");
+  wrap.className =
+    "absolute left-0 z-20 min-w-48 rounded-lg border border-border bg-background shadow-md overflow-hidden text-sm text-foreground";
   const menu = document.createElement("div");
-  menu.className =
-    "absolute left-0 z-20 min-w-48 max-h-64 overflow-y-auto rounded-lg border border-border bg-background shadow-md py-1 text-sm text-foreground";
+  menu.className = "scrollbar-sm max-h-64 overflow-y-auto py-1";
+  // Fade edges signal that the list scrolls; shown only while more content
+  // is hidden in that direction.
+  const fade = (side) => {
+    const f = document.createElement("div");
+    f.className =
+      `pointer-events-none absolute inset-x-0 ${side}-0 h-8 opacity-0 transition-opacity duration-150`;
+    f.style.background = `linear-gradient(to ${
+      side === "top" ? "bottom" : "top"
+    }, var(--color-background), transparent)`;
+    return f;
+  };
+  const fadeTop = fade("top");
+  const fadeBottom = fade("bottom");
+  const updateFades = () => {
+    fadeTop.classList.toggle("opacity-0", menu.scrollTop <= 4);
+    fadeBottom.classList.toggle(
+      "opacity-0",
+      menu.scrollTop + menu.clientHeight >= menu.scrollHeight - 4,
+    );
+  };
+  menu.addEventListener("scroll", updateFades);
   // Open upward when the trigger sits near the bottom of the scroll area, so
   // the menu isn't hidden behind the chat input.
   dd.addEventListener("toggle", () => {
@@ -815,10 +838,11 @@ function reAskDropdown(question) {
     const openUp = spaceBelow < 260 && spaceAbove > spaceBelow;
     menu.style.maxHeight =
       Math.min(256, Math.max(120, openUp ? spaceAbove : spaceBelow)) + "px";
-    menu.classList.toggle("bottom-full", openUp);
-    menu.classList.toggle("mb-1", openUp);
-    menu.classList.toggle("top-full", !openUp);
-    menu.classList.toggle("mt-1", !openUp);
+    wrap.classList.toggle("bottom-full", openUp);
+    wrap.classList.toggle("mb-1", openUp);
+    wrap.classList.toggle("top-full", !openUp);
+    wrap.classList.toggle("mt-1", !openUp);
+    updateFades();
   });
   for (const m of allModes()) {
     const b = document.createElement("button");
@@ -835,7 +859,8 @@ function reAskDropdown(question) {
     });
     menu.appendChild(b);
   }
-  dd.append(sum, menu);
+  wrap.append(menu, fadeTop, fadeBottom);
+  dd.append(sum, wrap);
   return dd;
 }
 
