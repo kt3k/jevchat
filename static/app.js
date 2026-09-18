@@ -143,7 +143,6 @@ const I18N = {
 const BUILTIN_MODES = [
   {
     id: "classic",
-    icon: "✅",
     name: { en: "Yes / No (classic Jev)", ja: "Yes / No (Jev標準)" },
     kind: "choice",
     options: [
@@ -161,7 +160,6 @@ const BUILTIN_MODES = [
   },
   {
     id: "maybe",
-    icon: "🤔",
     name: { en: "Yes / No / Maybe", ja: "Yes / No / Maybe" },
     kind: "choice",
     options: [
@@ -176,7 +174,6 @@ const BUILTIN_MODES = [
   },
   {
     id: "honest",
-    icon: "🤷",
     name: { en: "Yes / No / I don't know", ja: "Yes / No / わからない" },
     kind: "choice",
     options: [
@@ -191,7 +188,6 @@ const BUILTIN_MODES = [
   },
   {
     id: "vibe",
-    icon: "🔥",
     name: { en: "Vibe check", ja: "テンション高め" },
     kind: "choice",
     options: [
@@ -216,7 +212,6 @@ const BUILTIN_MODES = [
   },
   {
     id: "samurai",
-    icon: "⚔️",
     name: { en: "Samurai", ja: "武士" },
     kind: "choice",
     options: [
@@ -231,13 +226,12 @@ const BUILTIN_MODES = [
   },
   {
     id: "pirate",
-    icon: "🏴‍☠️",
     name: { en: "Pirate", ja: "海賊" },
     kind: "choice",
     options: [
       {
-        en: "Aye, cap'n! ☠️",
-        ja: "アイアイサー！☠️",
+        en: "Aye, cap'n!",
+        ja: "アイアイサー！",
         hint: "The answer is yes",
       },
       {
@@ -250,13 +244,12 @@ const BUILTIN_MODES = [
   },
   {
     id: "fortune",
-    icon: "🔮",
     name: { en: "Fortune teller", ja: "占い師" },
     kind: "choice",
     options: [
       {
-        en: "The stars say YES. ✨",
-        ja: "星は告げている——大吉。✨",
+        en: "The stars say YES.",
+        ja: "星は告げている——大吉。",
         hint: "A confident yes",
       },
       {
@@ -279,7 +272,6 @@ const BUILTIN_MODES = [
   },
   {
     id: "robot",
-    icon: "🤖",
     name: { en: "Robot", ja: "ロボット" },
     kind: "choice",
     options: [
@@ -294,7 +286,6 @@ const BUILTIN_MODES = [
   },
   {
     id: "mom",
-    icon: "🍙",
     name: { en: "Mom", ja: "おかん" },
     kind: "choice",
     options: [
@@ -317,7 +308,6 @@ const BUILTIN_MODES = [
   },
   {
     id: "percent",
-    icon: "📊",
     name: { en: "Just the numbers", ja: "確率そのまま" },
     kind: "noul", // the one mode that shows Jev's raw yes-probability
   },
@@ -408,7 +398,7 @@ function renderModeSelect() {
   for (const m of BUILTIN_MODES) {
     const o = document.createElement("option");
     o.value = m.id;
-    o.textContent = `${modeIcon(m)} ${modeName(m)}`;
+    o.textContent = modeName(m);
     gBuiltin.appendChild(o);
   }
   sel.appendChild(gBuiltin);
@@ -418,7 +408,7 @@ function renderModeSelect() {
     for (const m of customModes) {
       const o = document.createElement("option");
       o.value = m.id;
-      o.textContent = `${modeIcon(m)} ${modeName(m)}`;
+      o.textContent = modeName(m);
       gCustom.appendChild(o);
     }
     sel.appendChild(gCustom);
@@ -456,7 +446,8 @@ function renderSuggestions() {
   dice.className = "btn";
   dice.dataset.variant = "ghost";
   dice.dataset.size = "sm";
-  dice.textContent = "🎲";
+  dice.innerHTML =
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>';
   dice.title = t("shuffle");
   dice.setAttribute("aria-label", t("shuffle"));
   dice.addEventListener("click", renderSuggestions);
@@ -486,10 +477,6 @@ function modeExample(mode) {
   return `${labels[0]} … ${labels[labels.length - 1]}`;
 }
 
-function modeIcon(mode) {
-  return mode.icon || "✨";
-}
-
 function renderStylePicker() {
   const box = $("#style-picker");
   box.innerHTML = "";
@@ -504,13 +491,8 @@ function renderStylePicker() {
         : "border-border");
     b.setAttribute("aria-pressed", String(selected));
     const head = document.createElement("div");
-    head.className = "flex items-center gap-1.5 text-sm font-medium";
-    const icon = document.createElement("span");
-    icon.textContent = modeIcon(m);
-    const name = document.createElement("span");
-    name.className = "truncate";
-    name.textContent = modeName(m);
-    head.append(icon, name);
+    head.className = "text-sm font-medium truncate";
+    head.textContent = modeName(m);
     const example = document.createElement("div");
     example.className = "text-xs text-muted-foreground truncate";
     example.textContent = modeExample(m);
@@ -549,7 +531,7 @@ function renderHistory() {
     const mode = findMode(chat.modeId);
     const style = document.createElement("span");
     style.className = "truncate text-[11px] text-muted-foreground font-normal";
-    style.textContent = `${modeIcon(mode)} ${modeName(mode)}`;
+    style.textContent = modeName(mode);
     text.append(title, style);
     row.appendChild(text);
     const del = document.createElement("button");
@@ -557,7 +539,8 @@ function renderHistory() {
       "btn opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity shrink-0";
     del.dataset.variant = "ghost";
     del.dataset.size = "icon-xs";
-    del.textContent = "🗑";
+    del.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
     del.title = t("deleteChat");
     del.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -745,12 +728,10 @@ function reAskDropdown(question) {
     b.type = "button";
     b.className =
       "w-full text-left px-3 py-1.5 hover:bg-accent flex items-center gap-1.5 cursor-pointer";
-    const icon = document.createElement("span");
-    icon.textContent = modeIcon(m);
     const name = document.createElement("span");
     name.className = "truncate";
     name.textContent = modeName(m);
-    b.append(icon, name);
+    b.append(name);
     b.addEventListener("click", () => {
       dd.open = false;
       reAsk(question, m);

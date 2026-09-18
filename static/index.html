@@ -83,7 +83,6 @@
       <aside id="sidebar"
         class="fixed md:static z-40 h-full w-72 shrink-0 -translate-x-full md:translate-x-0 transition-transform duration-200 bg-muted/40 backdrop-blur border-r border-border flex flex-col">
         <div class="p-3 flex items-center gap-2">
-          <span class="text-xl">🔮</span>
           <span class="font-bold text-lg tracking-tight">jevchat</span>
           <span class="badge ml-auto" data-variant="secondary"
             data-i18n="demo">demo</span>
@@ -109,7 +108,12 @@
       <main class="flex-1 flex flex-col min-w-0">
         <header class="flex items-center gap-2 px-3 py-2">
           <button id="sidebar-toggle" class="btn md:hidden" data-variant="ghost"
-            data-size="icon" aria-label="Toggle sidebar">☰</button>
+            data-size="icon" aria-label="Toggle sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
           <select id="mode-select"
             class="select max-w-56 border-transparent shadow-none font-medium"
             data-size="sm" data-i18n-label="answerStyle"></select>
@@ -125,7 +129,6 @@
           <!-- Empty state -->
           <div id="empty-state"
             class="max-w-2xl mx-auto px-4 pt-16 text-center flex flex-col items-center gap-4">
-            <div class="text-6xl">🔮</div>
             <h2 class="text-2xl font-bold"
               data-i18n="emptyTitle">Ask Jev anything</h2>
             <p class="text-muted-foreground text-sm max-w-md"
@@ -154,8 +157,13 @@
                 rows="1" placeholder="Ask a yes/no question…"
                 data-i18n-placeholder="inputPlaceholder"></textarea>
               <button id="send-btn" class="btn rounded-full shrink-0"
-                data-size="icon-sm" type="submit"
-                data-i18n-label="send">↑</button>
+                data-size="icon-sm" type="submit" data-i18n-label="send">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+              </button>
             </div>
           </form>
           <p class="text-center text-[11px] text-muted-foreground pb-2 px-4"
