@@ -541,12 +541,6 @@ function renderTitle() {
   $("#chat-title").textContent = chat?.title || t("untitled");
 }
 
-const TONE_CLASSES = {
-  yes: "text-green-600 dark:text-green-400",
-  no: "text-red-600 dark:text-red-400",
-  meh: "text-amber-600 dark:text-amber-400",
-};
-
 function answerDisplay(msg) {
   // Returns {label, tone, detail} computed from stored raw result + current lang.
   if (msg.error) return { label: t("errorAnswer"), tone: "meh", detail: null };
@@ -611,10 +605,9 @@ function messageEl(msg, animate = false) {
   const body = document.createElement("div");
   body.className = "max-w-[85%] flex flex-col gap-1";
 
-  const { label, tone, detail } = answerDisplay(msg);
+  const { label, detail } = answerDisplay(msg);
   const answer = document.createElement("div");
-  answer.className = "whitespace-pre-wrap break-words " +
-    (TONE_CLASSES[tone] || "");
+  answer.className = "whitespace-pre-wrap break-words";
   answer.textContent = label;
   body.appendChild(answer);
 
@@ -626,9 +619,7 @@ function messageEl(msg, animate = false) {
     meter.className = "flex items-center gap-2 pt-1";
     meter.innerHTML =
       `<div class="h-1 w-24 rounded-full bg-muted overflow-hidden">
-         <div class="h-full rounded-full ${
-        detail.p >= 0.5 ? "bg-green-500" : "bg-red-500"
-      }" style="width:${pct}%"></div>
+         <div class="h-full rounded-full bg-muted-foreground" style="width:${pct}%"></div>
        </div>
        <span></span>`;
     meter.querySelector("span").textContent = I18N[lang].yesProb(pct);
