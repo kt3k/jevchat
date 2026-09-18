@@ -36,6 +36,7 @@ const I18N = {
     customNameError: "Please enter a style name.",
     customOptionsError: "Please enter between 2 and 8 answers.",
     percentYes: (pct) => `${pct}% YES`,
+    details: "details",
     pickStyle: "Jev can answer in different styles — pick one:",
     shuffle: "Shuffle questions",
     suggestions: [
@@ -96,6 +97,7 @@ const I18N = {
     customNameError: "スタイル名を入力してください。",
     customOptionsError: "答えは2〜8個で入力してください。",
     percentYes: (pct) => `イエス率 ${pct}%`,
+    details: "詳細",
     pickStyle: "Jev の答え方は変えられます — スタイルを選んでね:",
     shuffle: "他の質問を見る",
     suggestions: [
@@ -616,19 +618,21 @@ function messageEl(msg, animate = false) {
   answer.textContent = label;
   body.appendChild(answer);
 
+  // The numbers are tucked away behind a collapsed "details" toggle so the
+  // deadpan one-word answer stands alone.
   if (detail && typeof detail.p === "number") {
     const pct = Math.round(detail.p * 100);
     const meter = document.createElement("div");
-    meter.className = "flex items-center gap-2";
+    meter.className = "flex items-center gap-2 pt-1";
     meter.innerHTML =
       `<div class="h-1 w-24 rounded-full bg-muted overflow-hidden">
          <div class="h-full rounded-full ${
         detail.p >= 0.5 ? "bg-green-500" : "bg-red-500"
       }" style="width:${pct}%"></div>
        </div>
-       <span class="text-[11px] text-muted-foreground"></span>`;
+       <span></span>`;
     meter.querySelector("span").textContent = I18N[lang].yesProb(pct);
-    body.appendChild(meter);
+    body.appendChild(detailsEl(meter));
   } else if (detail && detail.probabilities) {
     const entries = Object.entries(detail.probabilities).sort((a, b) =>
       b[1] - a[1]
@@ -638,12 +642,23 @@ function messageEl(msg, animate = false) {
       parts.push(I18N[lang].confidence(Math.round(detail.confidence * 100)));
     }
     const line = document.createElement("div");
-    line.className = "text-[11px] text-muted-foreground";
+    line.className = "pt-1";
     line.textContent = parts.join(" · ");
-    body.appendChild(line);
+    body.appendChild(detailsEl(line));
   }
   wrap.appendChild(body);
   return wrap;
+}
+
+function detailsEl(content) {
+  const det = document.createElement("details");
+  det.className = "text-[11px] text-muted-foreground";
+  const sum = document.createElement("summary");
+  sum.className =
+    "cursor-pointer select-none w-fit opacity-70 hover:opacity-100";
+  sum.textContent = t("details");
+  det.append(sum, content);
+  return det;
 }
 
 function scrollToBottom(smooth = true) {
