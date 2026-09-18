@@ -5,8 +5,8 @@ A ChatGPT-style chat UI for
 AI's System One model that never generates text — it only decides.
 
 By default Jev answers **Yes** or **No**. You can switch to other answer styles
-(Yes/No/Maybe, Samurai, Pirate, Fortune teller, raw probabilities, …) or create
-your own custom set of answers for Jev to choose from.
+(Yes/No/Maybe, Mom, Pirate, Fortune teller, raw probabilities, …) or create your
+own custom set of answers for Jev to choose from.
 
 ## Features
 

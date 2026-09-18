@@ -187,6 +187,28 @@ const BUILTIN_MODES = [
     ],
   },
   {
+    id: "mom",
+    name: { en: "Mom", ja: "おかん" },
+    kind: "choice",
+    options: [
+      {
+        en: "Fine, but wear a jacket.",
+        ja: "ええよ。上着持っていきや。",
+        hint: "The answer is yes",
+      },
+      {
+        en: "Ask your father.",
+        ja: "お父さんに聞いて。",
+        hint: "Cannot or will not decide",
+      },
+      {
+        en: "No. And clean your room.",
+        ja: "あかん。部屋片付けなさい。",
+        hint: "The answer is no",
+      },
+    ],
+  },
+  {
     id: "vibe",
     name: { en: "Vibe check", ja: "テンション高め" },
     kind: "choice",
@@ -208,20 +230,6 @@ const BUILTIN_MODES = [
         ja: "絶対にない!!!",
         hint: "An emphatic, horrified no",
       },
-    ],
-  },
-  {
-    id: "samurai",
-    name: { en: "Samurai", ja: "武士" },
-    kind: "choice",
-    options: [
-      { en: "So be it.", ja: "よかろう。", hint: "The answer is yes" },
-      {
-        en: "The path is unclear.",
-        ja: "委細、不明なり。",
-        hint: "Too uncertain to decide",
-      },
-      { en: "It shall not pass.", ja: "ならぬ。", hint: "The answer is no" },
     ],
   },
   {
@@ -267,42 +275,6 @@ const BUILTIN_MODES = [
         en: "The stars say NO.",
         ja: "星は告げている——大凶。",
         hint: "A confident no",
-      },
-    ],
-  },
-  {
-    id: "robot",
-    name: { en: "Robot", ja: "ロボット" },
-    kind: "choice",
-    options: [
-      { en: "AFFIRMATIVE.", ja: "コウテイ。", hint: "The answer is yes" },
-      {
-        en: "ERROR: ANSWER NOT FOUND",
-        ja: "エラー: カイトウ フノウ",
-        hint: "Cannot determine the answer",
-      },
-      { en: "NEGATIVE.", ja: "ヒテイ。", hint: "The answer is no" },
-    ],
-  },
-  {
-    id: "mom",
-    name: { en: "Mom", ja: "おかん" },
-    kind: "choice",
-    options: [
-      {
-        en: "Fine, but wear a jacket.",
-        ja: "ええよ。上着持っていきや。",
-        hint: "The answer is yes",
-      },
-      {
-        en: "Ask your father.",
-        ja: "お父さんに聞いて。",
-        hint: "Cannot or will not decide",
-      },
-      {
-        en: "No. And clean your room.",
-        ja: "あかん。部屋片付けなさい。",
-        hint: "The answer is no",
       },
     ],
   },
