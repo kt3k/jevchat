@@ -37,6 +37,9 @@ const I18N = {
     customOptionsError: "Please enter between 2 and 8 answers.",
     percentYes: (pct) => `${pct}% YES`,
     details: "details",
+    detailsChoiceIntro:
+      "Jev picked the answer itself from these options (calibrated probabilities):",
+    detailsNoulIntro: "Jev's raw yes-probability (noul), no mapping:",
     pickStyle: "Jev can answer in different styles — pick one:",
     shuffle: "Shuffle questions",
     suggestions: [
@@ -98,6 +101,8 @@ const I18N = {
     customOptionsError: "答えは2〜8個で入力してください。",
     percentYes: (pct) => `イエス率 ${pct}%`,
     details: "詳細",
+    detailsChoiceIntro: "Jev がこの選択肢の中から自分で選択 (較正済み確率):",
+    detailsNoulIntro: "Jev が返した生のイエス確率 (noul)、マッピングなし:",
     pickStyle: "Jev の答え方は変えられます — スタイルを選んでね:",
     shuffle: "他の質問を見る",
     suggestions: [
@@ -128,168 +133,254 @@ const I18N = {
 };
 
 /* ------------------------------ answer modes ------------------------------ */
-// Built-in binary modes use Jev's noul (yes-probability). Each band is
-// [minProbability, {en, ja}, tone]; the first band whose min <= p wins.
-// tone: yes | no | meh (drives color).
+// Every mode (except "percent") is a Jev `choice` question: the options below
+// become the choice criteria, so Jev itself picks which answer to give — no
+// client-side probability mapping. Each option's hint tells Jev when that
+// answer applies. "percent" alone uses `noul` to show the raw yes-probability.
 
 const BUILTIN_MODES = [
   {
     id: "classic",
     icon: "✅",
     name: { en: "Yes / No (classic Jev)", ja: "Yes / No (Jev標準)" },
-    kind: "noul",
-    bands: [
-      [0.5, { en: "Yes.", ja: "はい。" }, "yes"],
-      [0, { en: "No.", ja: "いいえ。" }, "no"],
+    kind: "choice",
+    options: [
+      {
+        en: "Yes.",
+        ja: "はい。",
+        hint: "The answer to the user's question is yes",
+      },
+      {
+        en: "No.",
+        ja: "いいえ。",
+        hint: "The answer to the user's question is no",
+      },
     ],
   },
   {
     id: "maybe",
     icon: "🤔",
     name: { en: "Yes / No / Maybe", ja: "Yes / No / Maybe" },
-    kind: "noul",
-    bands: [
-      [0.65, { en: "Yes.", ja: "はい。" }, "yes"],
-      [0.35, { en: "Maybe.", ja: "たぶん。" }, "meh"],
-      [0, { en: "No.", ja: "いいえ。" }, "no"],
+    kind: "choice",
+    options: [
+      { en: "Yes.", ja: "はい。", hint: "The answer is clearly yes" },
+      { en: "No.", ja: "いいえ。", hint: "The answer is clearly no" },
+      {
+        en: "Maybe.",
+        ja: "たぶん。",
+        hint: "Genuinely uncertain — it could go either way",
+      },
     ],
   },
   {
     id: "honest",
     icon: "🤷",
     name: { en: "Yes / No / I don't know", ja: "Yes / No / わからない" },
-    kind: "noul",
-    bands: [
-      [0.65, { en: "Yes.", ja: "はい。" }, "yes"],
-      [0.35, { en: "I don't know.", ja: "わからない。" }, "meh"],
-      [0, { en: "No.", ja: "いいえ。" }, "no"],
+    kind: "choice",
+    options: [
+      { en: "Yes.", ja: "はい。", hint: "The answer is clearly yes" },
+      { en: "No.", ja: "いいえ。", hint: "The answer is clearly no" },
+      {
+        en: "I don't know.",
+        ja: "わからない。",
+        hint: "There is not enough information to decide",
+      },
     ],
   },
   {
     id: "magic8",
     icon: "🎱",
     name: { en: "Magic 8-Ball", ja: "マジック8ボール" },
-    kind: "noul",
-    bands: [
-      [0.97, { en: "It is certain.", ja: "間違いない。" }, "yes"],
-      [0.9, { en: "Without a doubt.", ja: "疑いの余地なし。" }, "yes"],
-      [0.75, { en: "Signs point to yes.", ja: "イエスの気配。" }, "yes"],
-      [0.6, { en: "Most likely.", ja: "たぶんね。" }, "yes"],
-      [0.45, { en: "Ask again later.", ja: "また後で聞いて。" }, "meh"],
-      [0.3, { en: "Don't count on it.", ja: "期待しないで。" }, "no"],
-      [0.1, { en: "My reply is no.", ja: "答えはノー。" }, "no"],
-      [0, { en: "Very doubtful.", ja: "かなり怪しい。" }, "no"],
+    kind: "choice",
+    options: [
+      {
+        en: "It is certain.",
+        ja: "間違いない。",
+        hint: "Yes, with near-total certainty",
+      },
+      {
+        en: "Without a doubt.",
+        ja: "疑いの余地なし。",
+        hint: "Yes, very confidently",
+      },
+      {
+        en: "Signs point to yes.",
+        ja: "イエスの気配。",
+        hint: "Probably yes",
+      },
+      { en: "Most likely.", ja: "たぶんね。", hint: "Leaning yes, but unsure" },
+      {
+        en: "Ask again later.",
+        ja: "また後で聞いて。",
+        hint: "Too uncertain to answer either way",
+      },
+      {
+        en: "Don't count on it.",
+        ja: "期待しないで。",
+        hint: "Leaning no, but unsure",
+      },
+      { en: "My reply is no.", ja: "答えはノー。", hint: "Probably no" },
+      {
+        en: "Very doubtful.",
+        ja: "かなり怪しい。",
+        hint: "No, very confidently",
+      },
     ],
   },
   {
     id: "vibe",
     icon: "🔥",
     name: { en: "Vibe check", ja: "テンション高め" },
-    kind: "noul",
-    bands: [
-      [0.9, { en: "ABSOLUTELY!!!", ja: "もちろん!!!" }, "yes"],
-      [0.65, { en: "yeah, sure", ja: "うん、いいんじゃない" }, "yes"],
-      [0.45, { en: "meh.", ja: "びみょう。" }, "meh"],
-      [0.2, { en: "nah", ja: "ないね" }, "no"],
-      [0, { en: "ABSOLUTELY NOT.", ja: "絶対にない!!!" }, "no"],
+    kind: "choice",
+    options: [
+      {
+        en: "ABSOLUTELY!!!",
+        ja: "もちろん!!!",
+        hint: "An emphatic, excited yes",
+      },
+      { en: "yeah, sure", ja: "うん、いいんじゃない", hint: "A casual yes" },
+      {
+        en: "meh.",
+        ja: "びみょう。",
+        hint: "Indifferent — neither yes nor no",
+      },
+      { en: "nah", ja: "ないね", hint: "A casual no" },
+      {
+        en: "ABSOLUTELY NOT.",
+        ja: "絶対にない!!!",
+        hint: "An emphatic, horrified no",
+      },
     ],
   },
   {
     id: "cat",
     icon: "🐱",
     name: { en: "Cat", ja: "猫" },
-    kind: "noul",
-    bands: [
-      [0.6, { en: "Meow! ᓚᘏᗢ  (yes)", ja: "ニャー！ᓚᘏᗢ (はい)" }, "yes"],
-      [0.4, { en: "…purr? (who knows)", ja: "…ゴロゴロ？(さあ)" }, "meh"],
-      [0, { en: "HISSSS. (no)", ja: "シャーッ！(いいえ)" }, "no"],
+    kind: "choice",
+    options: [
+      {
+        en: "Meow! ᓚᘏᗢ (yes)",
+        ja: "ニャー！ᓚᘏᗢ (はい)",
+        hint: "The answer is yes",
+      },
+      {
+        en: "…purr? (who knows)",
+        ja: "…ゴロゴロ？(さあ)",
+        hint: "The cat cannot decide",
+      },
+      {
+        en: "HISSSS. (no)",
+        ja: "シャーッ！(いいえ)",
+        hint: "The answer is no",
+      },
     ],
   },
   {
     id: "samurai",
     icon: "⚔️",
     name: { en: "Samurai", ja: "武士" },
-    kind: "noul",
-    bands: [
-      [0.6, { en: "So be it.", ja: "よかろう。" }, "yes"],
-      [0.4, { en: "The path is unclear.", ja: "委細、不明なり。" }, "meh"],
-      [0, { en: "It shall not pass.", ja: "ならぬ。" }, "no"],
+    kind: "choice",
+    options: [
+      { en: "So be it.", ja: "よかろう。", hint: "The answer is yes" },
+      {
+        en: "The path is unclear.",
+        ja: "委細、不明なり。",
+        hint: "Too uncertain to decide",
+      },
+      { en: "It shall not pass.", ja: "ならぬ。", hint: "The answer is no" },
     ],
   },
   {
     id: "pirate",
     icon: "🏴‍☠️",
     name: { en: "Pirate", ja: "海賊" },
-    kind: "noul",
-    bands: [
-      [0.6, { en: "Aye, cap'n! ☠️", ja: "アイアイサー！☠️" }, "yes"],
-      [
-        0.4,
-        { en: "Arr… the sea be foggy.", ja: "うーむ、海霧で見えぬ…" },
-        "meh",
-      ],
-      [0, { en: "Nay!", ja: "ノーじゃ！" }, "no"],
+    kind: "choice",
+    options: [
+      {
+        en: "Aye, cap'n! ☠️",
+        ja: "アイアイサー！☠️",
+        hint: "The answer is yes",
+      },
+      {
+        en: "Arr… the sea be foggy.",
+        ja: "うーむ、海霧で見えぬ…",
+        hint: "Too uncertain to decide",
+      },
+      { en: "Nay!", ja: "ノーじゃ！", hint: "The answer is no" },
     ],
   },
   {
     id: "fortune",
     icon: "🔮",
     name: { en: "Fortune teller", ja: "占い師" },
-    kind: "noul",
-    bands: [
-      [
-        0.85,
-        { en: "The stars say YES. ✨", ja: "星は告げている——大吉。✨" },
-        "yes",
-      ],
-      [0.6, {
+    kind: "choice",
+    options: [
+      {
+        en: "The stars say YES. ✨",
+        ja: "星は告げている——大吉。✨",
+        hint: "A confident yes",
+      },
+      {
         en: "The crystal ball leans yes…",
         ja: "水晶玉はイエスに傾いておる…",
-      }, "yes"],
-      [0.4, { en: "The mist has not cleared…", ja: "霧はまだ晴れぬ…" }, "meh"],
-      [0.15, { en: "The omens are bad.", ja: "凶兆が出ておる。" }, "no"],
-      [0, { en: "The stars say NO.", ja: "星は告げている——大凶。" }, "no"],
+        hint: "Leaning yes",
+      },
+      {
+        en: "The mist has not cleared…",
+        ja: "霧はまだ晴れぬ…",
+        hint: "Too uncertain to decide",
+      },
+      { en: "The omens are bad.", ja: "凶兆が出ておる。", hint: "Leaning no" },
+      {
+        en: "The stars say NO.",
+        ja: "星は告げている——大凶。",
+        hint: "A confident no",
+      },
     ],
   },
   {
     id: "robot",
     icon: "🤖",
     name: { en: "Robot", ja: "ロボット" },
-    kind: "noul",
-    bands: [
-      [0.6, { en: "AFFIRMATIVE.", ja: "コウテイ。" }, "yes"],
-      [
-        0.4,
-        { en: "ERROR: ANSWER NOT FOUND", ja: "エラー: カイトウ フノウ" },
-        "meh",
-      ],
-      [0, { en: "NEGATIVE.", ja: "ヒテイ。" }, "no"],
+    kind: "choice",
+    options: [
+      { en: "AFFIRMATIVE.", ja: "コウテイ。", hint: "The answer is yes" },
+      {
+        en: "ERROR: ANSWER NOT FOUND",
+        ja: "エラー: カイトウ フノウ",
+        hint: "Cannot determine the answer",
+      },
+      { en: "NEGATIVE.", ja: "ヒテイ。", hint: "The answer is no" },
     ],
   },
   {
     id: "mom",
     icon: "🍙",
     name: { en: "Mom", ja: "おかん" },
-    kind: "noul",
-    bands: [
-      [0.6, {
+    kind: "choice",
+    options: [
+      {
         en: "Fine, but wear a jacket.",
         ja: "ええよ。上着持っていきや。",
-      }, "yes"],
-      [0.4, { en: "Ask your father.", ja: "お父さんに聞いて。" }, "meh"],
-      [
-        0,
-        { en: "No. And clean your room.", ja: "あかん。部屋片付けなさい。" },
-        "no",
-      ],
+        hint: "The answer is yes",
+      },
+      {
+        en: "Ask your father.",
+        ja: "お父さんに聞いて。",
+        hint: "Cannot or will not decide",
+      },
+      {
+        en: "No. And clean your room.",
+        ja: "あかん。部屋片付けなさい。",
+        hint: "The answer is no",
+      },
     ],
   },
   {
     id: "percent",
     icon: "📊",
     name: { en: "Just the numbers", ja: "確率そのまま" },
-    kind: "noul",
-    bands: null, // rendered as raw percentage
+    kind: "noul", // the one mode that shows Jev's raw yes-probability
   },
 ];
 
@@ -433,16 +524,27 @@ function renderSuggestions() {
   box.appendChild(dice);
 }
 
+/** The display label of an option: built-in options are {en, ja, hint},
+ * custom ones are {key, hint}. */
+function optionLabel(opt) {
+  return typeof opt.key === "string" ? opt.key : (opt[lang] || opt.en);
+}
+
+/** The options as sent to the API: Jev chooses among these labels. */
+function sendOptions(mode) {
+  return mode.options.map((o) => {
+    const key = optionLabel(o);
+    return o.hint ? { key, hint: o.hint } : { key };
+  });
+}
+
 /** Short preview of how a mode answers, e.g. "Yes. / No." */
 function modeExample(mode) {
-  if (mode.kind === "choice") {
-    return mode.options.map((o) => o.key).slice(0, 3).join(" / ");
-  }
-  if (!mode.bands) return I18N[lang].percentYes(87);
-  const pick = (band) => band[1][lang] || band[1].en;
-  if (mode.bands.length <= 3) return mode.bands.map(pick).join(" / ");
+  if (mode.kind === "noul") return I18N[lang].percentYes(87);
+  const labels = mode.options.map(optionLabel);
+  if (labels.length <= 4) return labels.join(" / ");
   // Long lists (e.g. 8-ball): show the two extremes.
-  return `${pick(mode.bands[0])} … ${pick(mode.bands[mode.bands.length - 1])}`;
+  return `${labels[0]} … ${labels[labels.length - 1]}`;
 }
 
 function modeIcon(mode) {
@@ -542,31 +644,18 @@ function renderTitle() {
 }
 
 function answerDisplay(msg) {
-  // Returns {label, tone, detail} computed from stored raw result + current lang.
-  if (msg.error) return { label: t("errorAnswer"), tone: "meh", detail: null };
-  const mode = findMode(msg.modeId);
+  // Returns {label, detail} from the stored raw Jev result.
+  if (msg.error) return { label: t("errorAnswer"), detail: null };
   if (msg.result.kind === "noul") {
-    const p = msg.result.p;
-    const pct = Math.round(p * 100);
-    if (mode.id === "percent" || !mode.bands) {
-      return {
-        label: I18N[lang].percentYes(pct),
-        tone: p >= 0.5 ? "yes" : "no",
-        detail: { p },
-      };
-    }
-    for (const [min, label, tone] of mode.bands) {
-      if (p >= min) {
-        return { label: label[lang] || label.en, tone, detail: { p } };
-      }
-    }
-    const last = mode.bands[mode.bands.length - 1];
-    return { label: last[1][lang] || last[1].en, tone: last[2], detail: { p } };
+    // "percent" mode (and history saved by older versions).
+    return {
+      label: I18N[lang].percentYes(Math.round(msg.result.p * 100)),
+      detail: { p: msg.result.p },
+    };
   }
-  // choice (custom modes)
+  // choice: the label IS what Jev picked — no client-side mapping.
   return {
     label: msg.result.choice,
-    tone: "meh",
     detail: {
       confidence: msg.result.confidence,
       probabilities: msg.result.probabilities,
@@ -615,27 +704,54 @@ function messageEl(msg, animate = false) {
   // deadpan one-word answer stands alone.
   if (detail && typeof detail.p === "number") {
     const pct = Math.round(detail.p * 100);
+    const box = document.createElement("div");
+    box.className = "pt-1 flex flex-col gap-1";
+    const intro = document.createElement("div");
+    intro.textContent = t("detailsNoulIntro");
     const meter = document.createElement("div");
-    meter.className = "flex items-center gap-2 pt-1";
+    meter.className = "flex items-center gap-2";
     meter.innerHTML =
       `<div class="h-1 w-24 rounded-full bg-muted overflow-hidden">
          <div class="h-full rounded-full bg-muted-foreground" style="width:${pct}%"></div>
        </div>
        <span></span>`;
     meter.querySelector("span").textContent = I18N[lang].yesProb(pct);
-    body.appendChild(detailsEl(meter));
+    box.append(intro, meter);
+    body.appendChild(detailsEl(box));
   } else if (detail && detail.probabilities) {
+    // Show Jev's full distribution over the options it chose from.
+    const box = document.createElement("div");
+    box.className = "pt-1 flex flex-col gap-1";
+    const intro = document.createElement("div");
+    intro.textContent = t("detailsChoiceIntro");
+    box.appendChild(intro);
     const entries = Object.entries(detail.probabilities).sort((a, b) =>
       b[1] - a[1]
-    ).slice(0, 4);
-    const parts = entries.map(([key, p]) => `${key} ${Math.round(p * 100)}%`);
-    if (typeof detail.confidence === "number") {
-      parts.push(I18N[lang].confidence(Math.round(detail.confidence * 100)));
+    );
+    for (const [key, p] of entries) {
+      const pct = Math.round(p * 100);
+      const row = document.createElement("div");
+      row.className = "flex items-center gap-2" +
+        (key === msg.result.choice ? " font-medium" : "");
+      row.innerHTML =
+        `<div class="h-1 w-16 shrink-0 rounded-full bg-muted overflow-hidden">
+           <div class="h-full rounded-full bg-muted-foreground" style="width:${pct}%"></div>
+         </div>
+         <span class="truncate"></span>
+         <span class="shrink-0"></span>`;
+      const [labelEl, pctEl] = row.querySelectorAll("span");
+      labelEl.textContent = key;
+      pctEl.textContent = `${pct}%`;
+      box.appendChild(row);
     }
-    const line = document.createElement("div");
-    line.className = "pt-1";
-    line.textContent = parts.join(" · ");
-    body.appendChild(detailsEl(line));
+    if (typeof detail.confidence === "number") {
+      const conf = document.createElement("div");
+      conf.textContent = I18N[lang].confidence(
+        Math.round(detail.confidence * 100),
+      );
+      box.appendChild(conf);
+    }
+    body.appendChild(detailsEl(box));
   }
   wrap.appendChild(body);
   return wrap;
@@ -737,7 +853,7 @@ async function sendMessage(text) {
     wantTitle: isFirst,
     mode: mode.kind === "noul"
       ? { kind: "noul" }
-      : { kind: "choice", options: mode.options },
+      : { kind: "choice", options: sendOptions(mode) },
   };
 
   let jevMsg;

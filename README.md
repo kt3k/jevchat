@@ -46,9 +46,12 @@ The server proxies `POST /api/chat` to
 `POST https://api.typesafe.ai/v1/systemone` (the API key never reaches the
 browser):
 
-- Binary styles send a `noul` question ("is the answer to the user's latest
-  question yes?") and map the returned yes-probability onto the style's labels.
-- Custom styles send a `choice` question whose criteria are your answers.
+- Every answer style (built-in and custom) sends a `choice` question whose
+  criteria are the style's answers, so Jev itself picks which answer to give —
+  there is no client-side probability mapping. The collapsed "details" toggle
+  under each reply shows Jev's calibrated probability for every option.
+- The one exception is the "Just the numbers" style, which sends a `noul`
+  question and shows the raw yes-probability.
 - On the first message of a chat, a second `choice` question asks Jev to pick
   the question fragment that best captures the topic, which becomes the chat
   title.
