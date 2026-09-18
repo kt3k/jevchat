@@ -36,11 +36,23 @@ const I18N = {
     customNameError: "Please enter a style name.",
     customOptionsError: "Please enter between 2 and 8 answers.",
     percentYes: (pct) => `${pct}% YES`,
+    pickStyle: "Jev can answer in different styles — pick one:",
+    shuffle: "Shuffle questions",
     suggestions: [
       "Is a hot dog a sandwich?",
       "Should I deploy on Friday?",
       "Do aliens exist?",
       "Is it okay to put pineapple on pizza?",
+      "Is cereal a soup?",
+      "Should I text my ex?",
+      "Is water wet?",
+      "Will AI take my job?",
+      "Do I really need another mechanical keyboard?",
+      "Is it too late to learn the piano?",
+      "Do I need another coffee?",
+      "Is my code ready for production?",
+      "Should I get bangs?",
+      "Can money buy happiness?",
     ],
     fallbackTitles: [
       "The Great Unknown",
@@ -84,11 +96,23 @@ const I18N = {
     customNameError: "スタイル名を入力してください。",
     customOptionsError: "答えは2〜8個で入力してください。",
     percentYes: (pct) => `イエス率 ${pct}%`,
+    pickStyle: "Jev の答え方は変えられます — スタイルを選んでね:",
+    shuffle: "他の質問を見る",
     suggestions: [
       "きのこの山はたけのこの里より美味しい?",
       "金曜日にデプロイしてもいい?",
       "宇宙人はいる?",
       "明日の会議、休んでもいい?",
+      "カレーは飲み物?",
+      "目玉焼きには醤油をかけるべき?",
+      "元恋人に連絡してもいい?",
+      "AIに仕事を奪われる?",
+      "キーボード、もう1台買ってもいい?",
+      "今からピアノを始めるのは遅い?",
+      "コーヒーおかわりすべき?",
+      "このコード、本番に出して大丈夫?",
+      "前髪、切るべき?",
+      "お金で幸せは買える?",
     ],
     fallbackTitles: [
       "名もなき問い",
@@ -109,6 +133,7 @@ const I18N = {
 const BUILTIN_MODES = [
   {
     id: "classic",
+    icon: "✅",
     name: { en: "Yes / No (classic Jev)", ja: "Yes / No (Jev標準)" },
     kind: "noul",
     bands: [
@@ -118,6 +143,7 @@ const BUILTIN_MODES = [
   },
   {
     id: "maybe",
+    icon: "🤔",
     name: { en: "Yes / No / Maybe", ja: "Yes / No / Maybe" },
     kind: "noul",
     bands: [
@@ -128,6 +154,7 @@ const BUILTIN_MODES = [
   },
   {
     id: "honest",
+    icon: "🤷",
     name: { en: "Yes / No / I don't know", ja: "Yes / No / わからない" },
     kind: "noul",
     bands: [
@@ -138,6 +165,7 @@ const BUILTIN_MODES = [
   },
   {
     id: "magic8",
+    icon: "🎱",
     name: { en: "Magic 8-Ball", ja: "マジック8ボール" },
     kind: "noul",
     bands: [
@@ -153,6 +181,7 @@ const BUILTIN_MODES = [
   },
   {
     id: "vibe",
+    icon: "🔥",
     name: { en: "Vibe check", ja: "テンション高め" },
     kind: "noul",
     bands: [
@@ -165,6 +194,7 @@ const BUILTIN_MODES = [
   },
   {
     id: "cat",
+    icon: "🐱",
     name: { en: "Cat", ja: "猫" },
     kind: "noul",
     bands: [
@@ -175,6 +205,7 @@ const BUILTIN_MODES = [
   },
   {
     id: "samurai",
+    icon: "⚔️",
     name: { en: "Samurai", ja: "武士" },
     kind: "noul",
     bands: [
@@ -185,6 +216,7 @@ const BUILTIN_MODES = [
   },
   {
     id: "pirate",
+    icon: "🏴‍☠️",
     name: { en: "Pirate", ja: "海賊" },
     kind: "noul",
     bands: [
@@ -198,7 +230,61 @@ const BUILTIN_MODES = [
     ],
   },
   {
+    id: "fortune",
+    icon: "🔮",
+    name: { en: "Fortune teller", ja: "占い師" },
+    kind: "noul",
+    bands: [
+      [
+        0.85,
+        { en: "The stars say YES. ✨", ja: "星は告げている——大吉。✨" },
+        "yes",
+      ],
+      [0.6, {
+        en: "The crystal ball leans yes…",
+        ja: "水晶玉はイエスに傾いておる…",
+      }, "yes"],
+      [0.4, { en: "The mist has not cleared…", ja: "霧はまだ晴れぬ…" }, "meh"],
+      [0.15, { en: "The omens are bad.", ja: "凶兆が出ておる。" }, "no"],
+      [0, { en: "The stars say NO.", ja: "星は告げている——大凶。" }, "no"],
+    ],
+  },
+  {
+    id: "robot",
+    icon: "🤖",
+    name: { en: "Robot", ja: "ロボット" },
+    kind: "noul",
+    bands: [
+      [0.6, { en: "AFFIRMATIVE.", ja: "コウテイ。" }, "yes"],
+      [
+        0.4,
+        { en: "ERROR: ANSWER NOT FOUND", ja: "エラー: カイトウ フノウ" },
+        "meh",
+      ],
+      [0, { en: "NEGATIVE.", ja: "ヒテイ。" }, "no"],
+    ],
+  },
+  {
+    id: "mom",
+    icon: "🍙",
+    name: { en: "Mom", ja: "おかん" },
+    kind: "noul",
+    bands: [
+      [0.6, {
+        en: "Fine, but wear a jacket.",
+        ja: "ええよ。上着持っていきや。",
+      }, "yes"],
+      [0.4, { en: "Ask your father.", ja: "お父さんに聞いて。" }, "meh"],
+      [
+        0,
+        { en: "No. And clean your room.", ja: "あかん。部屋片付けなさい。" },
+        "no",
+      ],
+    ],
+  },
+  {
     id: "percent",
+    icon: "📊",
     name: { en: "Just the numbers", ja: "確率そのまま" },
     kind: "noul",
     bands: null, // rendered as raw percentage
@@ -274,6 +360,7 @@ function applyI18n() {
   $("#lang-select").value = lang;
   renderModeSelect();
   renderSuggestions();
+  renderStylePicker();
   renderHistory();
   renderMessages();
 }
@@ -286,7 +373,7 @@ function renderModeSelect() {
   for (const m of BUILTIN_MODES) {
     const o = document.createElement("option");
     o.value = m.id;
-    o.textContent = modeName(m);
+    o.textContent = `${modeIcon(m)} ${modeName(m)}`;
     gBuiltin.appendChild(o);
   }
   sel.appendChild(gBuiltin);
@@ -296,7 +383,7 @@ function renderModeSelect() {
     for (const m of customModes) {
       const o = document.createElement("option");
       o.value = m.id;
-      o.textContent = modeName(m);
+      o.textContent = `${modeIcon(m)} ${modeName(m)}`;
       gCustom.appendChild(o);
     }
     sel.appendChild(gCustom);
@@ -308,22 +395,96 @@ function renderModeSelect() {
   sel.value = findMode(currentModeId).id;
 }
 
+const SUGGESTION_COUNT = 6;
+
 function renderSuggestions() {
   const box = $("#suggestions");
   box.innerHTML = "";
-  for (const s of I18N[lang].suggestions) {
+  const pool = [...I18N[lang].suggestions];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  for (const s of pool.slice(0, SUGGESTION_COUNT)) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "btn";
     b.dataset.variant = "outline";
     b.dataset.size = "sm";
     b.textContent = s;
+    // Presets start the conversation immediately.
+    b.addEventListener("click", () => sendMessage(s));
+    box.appendChild(b);
+  }
+  const dice = document.createElement("button");
+  dice.type = "button";
+  dice.className = "btn";
+  dice.dataset.variant = "ghost";
+  dice.dataset.size = "sm";
+  dice.textContent = "🎲";
+  dice.title = t("shuffle");
+  dice.setAttribute("aria-label", t("shuffle"));
+  dice.addEventListener("click", renderSuggestions);
+  box.appendChild(dice);
+}
+
+/** Short preview of how a mode answers, e.g. "Yes. / No." */
+function modeExample(mode) {
+  if (mode.kind === "choice") {
+    return mode.options.map((o) => o.key).slice(0, 3).join(" / ");
+  }
+  if (!mode.bands) return I18N[lang].percentYes(87);
+  const pick = (band) => band[1][lang] || band[1].en;
+  if (mode.bands.length <= 3) return mode.bands.map(pick).join(" / ");
+  // Long lists (e.g. 8-ball): show the two extremes.
+  return `${pick(mode.bands[0])} … ${pick(mode.bands[mode.bands.length - 1])}`;
+}
+
+function modeIcon(mode) {
+  return mode.icon || "✨";
+}
+
+function renderStylePicker() {
+  const box = $("#style-picker");
+  box.innerHTML = "";
+  for (const m of allModes()) {
+    const b = document.createElement("button");
+    b.type = "button";
+    const selected = m.id === currentModeId;
+    b.className =
+      "rounded-xl border p-3 text-left flex flex-col gap-1 transition-colors hover:bg-accent cursor-pointer " +
+      (selected
+        ? "border-primary ring-1 ring-primary bg-accent/60"
+        : "border-border");
+    b.setAttribute("aria-pressed", String(selected));
+    const head = document.createElement("div");
+    head.className = "flex items-center gap-1.5 text-sm font-medium";
+    const icon = document.createElement("span");
+    icon.textContent = modeIcon(m);
+    const name = document.createElement("span");
+    name.className = "truncate";
+    name.textContent = modeName(m);
+    head.append(icon, name);
+    const example = document.createElement("div");
+    example.className = "text-xs text-muted-foreground truncate";
+    example.textContent = modeExample(m);
+    b.append(head, example);
     b.addEventListener("click", () => {
-      $("#chat-input").value = s;
-      $("#chat-input").focus();
+      currentModeId = m.id;
+      saveJSON(LS.mode, currentModeId);
+      $("#mode-select").value = m.id;
+      renderStylePicker();
     });
     box.appendChild(b);
   }
+  // "Create your own" tile
+  const create = document.createElement("button");
+  create.type = "button";
+  create.className =
+    "rounded-xl border border-dashed border-border p-3 text-left flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent cursor-pointer";
+  create.textContent = t("createCustom");
+  create.addEventListener("click", openCustomDialog);
+  box.appendChild(create);
 }
 
 function renderHistory() {
@@ -447,6 +608,14 @@ function messageEl(msg, animate = false) {
   const head = document.createElement("div");
   head.className = "flex items-center gap-2 text-xs text-muted-foreground";
   head.innerHTML = `<span>🔮</span><span class="font-medium">Jev</span>`;
+  // Show which answer style produced this reply, so switching styles is
+  // discoverable from the conversation itself.
+  const mode = findMode(msg.modeId);
+  const styleBadge = document.createElement("span");
+  styleBadge.className = "badge";
+  styleBadge.dataset.variant = "outline";
+  styleBadge.textContent = `${modeIcon(mode)} ${modeName(mode)}`;
+  head.appendChild(styleBadge);
   card.appendChild(head);
 
   const { label, tone, detail } = answerDisplay(msg);
@@ -660,6 +829,7 @@ function saveCustomMode() {
   currentModeId = mode.id;
   saveJSON(LS.mode, currentModeId);
   renderModeSelect();
+  renderStylePicker();
   $("#custom-dialog").close();
 }
 
@@ -721,6 +891,7 @@ $("#mode-select").addEventListener("change", (e) => {
   }
   currentModeId = e.target.value;
   saveJSON(LS.mode, currentModeId);
+  renderStylePicker();
 });
 
 $("#sidebar-toggle").addEventListener("click", () => {
