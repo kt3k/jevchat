@@ -106,17 +106,16 @@
 
       <!-- Main -->
       <main class="flex-1 flex flex-col min-w-0">
-        <header
-          class="flex items-center gap-2 px-3 py-2 border-b border-border">
+        <header class="flex items-center gap-2 px-3 py-2">
           <button id="sidebar-toggle" class="btn md:hidden" data-variant="ghost"
             data-size="icon" aria-label="Toggle sidebar">☰</button>
+          <select id="mode-select"
+            class="select max-w-56 border-transparent shadow-none font-medium"
+            data-size="sm" data-i18n-label="answerStyle"></select>
+          <div class="flex-1"></div>
           <h1 id="chat-title"
-            class="font-medium truncate text-sm text-muted-foreground flex-1"
+            class="truncate text-sm text-muted-foreground max-w-[45%]"
             data-i18n="untitled">New chat</h1>
-          <label class="text-xs text-muted-foreground hidden sm:block"
-            for="mode-select" data-i18n="answerStyle">Answer style</label>
-          <select id="mode-select" class="select max-w-48"
-            data-size="sm"></select>
         </header>
 
         <section id="messages" class="flex-1 overflow-y-auto">
@@ -145,15 +144,18 @@
           </div>
         </section>
 
-        <footer class="border-t border-border">
-          <form id="chat-form"
-            class="max-w-2xl mx-auto px-4 py-3 flex items-end gap-2">
-            <textarea id="chat-input"
-              class="textarea flex-1 resize-none min-h-10 max-h-40" rows="1"
-              placeholder="Ask a yes/no question…"
-              data-i18n-placeholder="inputPlaceholder"></textarea>
-            <button id="send-btn" class="btn" type="submit"
-              data-i18n="send">Send</button>
+        <footer>
+          <form id="chat-form" class="max-w-2xl mx-auto px-4 pt-1 pb-2">
+            <div
+              class="flex items-end gap-2 rounded-3xl border border-border bg-background shadow-sm px-4 py-2 focus-within:border-ring">
+              <textarea id="chat-input"
+                class="flex-1 resize-none bg-transparent border-0 outline-none min-h-6 max-h-40 py-1 text-base"
+                rows="1" placeholder="Ask a yes/no question…"
+                data-i18n-placeholder="inputPlaceholder"></textarea>
+              <button id="send-btn" class="btn rounded-full shrink-0"
+                data-size="icon-sm" type="submit"
+                data-i18n-label="send">↑</button>
+            </div>
           </form>
           <p class="text-center text-[11px] text-muted-foreground pb-2 px-4"
             data-i18n="disclaimer">

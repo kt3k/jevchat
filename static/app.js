@@ -357,6 +357,9 @@ function applyI18n() {
   for (const el of document.querySelectorAll("[data-i18n-placeholder]")) {
     el.placeholder = t(el.dataset.i18nPlaceholder);
   }
+  for (const el of document.querySelectorAll("[data-i18n-label]")) {
+    el.setAttribute("aria-label", t(el.dataset.i18nLabel));
+  }
   $("#lang-select").value = lang;
   renderModeSelect();
   renderSuggestions();
@@ -597,70 +600,49 @@ function messageEl(msg, animate = false) {
   if (msg.role === "user") {
     const bubble = document.createElement("div");
     bubble.className =
-      "bg-primary text-primary-foreground rounded-2xl rounded-br-sm px-4 py-2 max-w-[80%] whitespace-pre-wrap break-words";
+      "bg-muted rounded-3xl px-4 py-2 max-w-[80%] whitespace-pre-wrap break-words";
     bubble.textContent = msg.text;
     wrap.appendChild(bubble);
     return wrap;
   }
-  // Jev message
-  const card = document.createElement("div");
-  card.className = "card max-w-[85%] px-4 py-3 flex flex-col gap-2";
-  const head = document.createElement("div");
-  head.className = "flex items-center gap-2 text-xs text-muted-foreground";
-  head.innerHTML = `<span>🔮</span><span class="font-medium">Jev</span>`;
-  // Show which answer style produced this reply, so switching styles is
-  // discoverable from the conversation itself.
-  const mode = findMode(msg.modeId);
-  const styleBadge = document.createElement("span");
-  styleBadge.className = "badge";
-  styleBadge.dataset.variant = "outline";
-  styleBadge.textContent = `${modeIcon(mode)} ${modeName(mode)}`;
-  head.appendChild(styleBadge);
-  card.appendChild(head);
+  // Jev message: plain text, ChatGPT-style (no card, no speaker line).
+  const body = document.createElement("div");
+  body.className = "max-w-[85%] flex flex-col gap-1";
 
   const { label, tone, detail } = answerDisplay(msg);
   const answer = document.createElement("div");
-  answer.className = "text-2xl font-bold " + (TONE_CLASSES[tone] || "");
+  answer.className = "whitespace-pre-wrap break-words " +
+    (TONE_CLASSES[tone] || "");
   answer.textContent = label;
-  card.appendChild(answer);
+  body.appendChild(answer);
 
   if (detail && typeof detail.p === "number") {
     const pct = Math.round(detail.p * 100);
     const meter = document.createElement("div");
     meter.className = "flex items-center gap-2";
     meter.innerHTML =
-      `<div class="h-1.5 w-32 rounded-full bg-muted overflow-hidden">
+      `<div class="h-1 w-24 rounded-full bg-muted overflow-hidden">
          <div class="h-full rounded-full ${
         detail.p >= 0.5 ? "bg-green-500" : "bg-red-500"
       }" style="width:${pct}%"></div>
        </div>
        <span class="text-[11px] text-muted-foreground"></span>`;
     meter.querySelector("span").textContent = I18N[lang].yesProb(pct);
-    card.appendChild(meter);
+    body.appendChild(meter);
   } else if (detail && detail.probabilities) {
-    const badges = document.createElement("div");
-    badges.className = "flex flex-wrap gap-1";
     const entries = Object.entries(detail.probabilities).sort((a, b) =>
       b[1] - a[1]
     ).slice(0, 4);
-    for (const [key, p] of entries) {
-      const b = document.createElement("span");
-      b.className = "badge";
-      b.dataset.variant = key === msg.result.choice ? "default" : "outline";
-      b.textContent = `${key} ${Math.round(p * 100)}%`;
-      badges.appendChild(b);
-    }
-    card.appendChild(badges);
+    const parts = entries.map(([key, p]) => `${key} ${Math.round(p * 100)}%`);
     if (typeof detail.confidence === "number") {
-      const conf = document.createElement("span");
-      conf.className = "text-[11px] text-muted-foreground";
-      conf.textContent = I18N[lang].confidence(
-        Math.round(detail.confidence * 100),
-      );
-      card.appendChild(conf);
+      parts.push(I18N[lang].confidence(Math.round(detail.confidence * 100)));
     }
+    const line = document.createElement("div");
+    line.className = "text-[11px] text-muted-foreground";
+    line.textContent = parts.join(" · ");
+    body.appendChild(line);
   }
-  wrap.appendChild(card);
+  wrap.appendChild(body);
   return wrap;
 }
 
@@ -734,11 +716,11 @@ async function sendMessage(text) {
   const thinking = document.createElement("div");
   thinking.className = "flex justify-start msg-enter";
   thinking.innerHTML =
-    `<div class="card px-4 py-3 flex items-center gap-2 text-sm text-muted-foreground">
-       <span>🔮</span><span></span>
+    `<div class="flex items-center gap-2 text-sm text-muted-foreground">
+       <span></span>
        <span class="flex gap-0.5"><span class="thinking-dot">●</span><span class="thinking-dot">●</span><span class="thinking-dot">●</span></span>
      </div>`;
-  thinking.querySelectorAll("span")[1].textContent = t("thinking");
+  thinking.querySelector("span").textContent = t("thinking");
   $("#messages-inner").appendChild(thinking);
   scrollToBottom();
 
